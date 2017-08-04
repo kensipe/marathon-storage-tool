@@ -1,6 +1,5 @@
 #!/usr/bin/env amm-2.11
 
-// import ammonite.ops._; interp.load.cp(pwd / RelPath("marathon-1.4.5/target/scala-2.11/marathon-assembly-1.4.5.jar"))
 import scala.annotation.tailrec
 
 import akka.actor.{ ActorSystem, ActorRefFactory, Scheduler }
@@ -8,20 +7,20 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Source, Sink}
 import akka.util.Timeout
 import com.codahale.metrics.MetricRegistry
-import mesosphere.marathon.metrics.Metrics
 import mesosphere.marathon.Protos.StorageVersion
-import mesosphere.marathon.storage._
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration._
-import org.apache.curator.framework.recipes.leader.LeaderLatch
-import org.apache.curator.framework.CuratorFramework
-import mesosphere.marathon.storage.migration.StorageVersions
-import mesosphere.marathon.state.PathId
 import mesosphere.marathon.core.instance.Instance
-import scala.collection.immutable.Seq
+import mesosphere.marathon.metrics.Metrics
+import mesosphere.marathon.state.PathId
+import mesosphere.marathon.storage._
+import mesosphere.marathon.storage.migration.StorageVersions
 import mesosphere.marathon.storage.repository.AppRepository
+import org.apache.curator.framework.CuratorFramework
+import org.apache.curator.framework.recipes.leader.LeaderLatch
 import org.rogach.scallop.ScallopOption
+import scala.collection.immutable.Seq
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Future, Await}
 
 object Env {
   implicit val actorSystem = ActorSystem()
@@ -267,8 +266,12 @@ class MarathonStorage(args: List[String] = MarathonStorage.argsFromEnv) {
   }
 
   private class MyStorageConf(args: List[String] = Nil, override val availableFeatures: Set[String] = Set.empty) extends org.rogach.scallop.ScallopConf(args) with StorageConf {
-    override def onError(e: Throwable): Unit = {
-      println(e)
+    import org.rogach.scallop.exceptions._
+    override def onError(e: Throwable): Unit = e match {
+      case Help("") =>
+        builder.printHelp
+        sys.exit(0)
+      case e => println(e)
     }
 
     override lazy val storeCache = ScallopStub(Some(false))
