@@ -2,7 +2,7 @@
 
 artifacts/marathon-%.tgz:
 	mkdir -p artifacts/
-	curl -f -o $@.tmp http://downloads.mesosphere.com/marathon/v$*/marathon-$*.tgz
+	curl -f -o $@.tmp https://downloads.mesosphere.com/marathon/v$*/marathon-$*.tgz
 	mv $@.tmp $@
 
 targets/%/marathon.jar: artifacts/marathon-%.tgz
@@ -40,5 +40,8 @@ targets/%/Dockerfile: Dockerfile
 
 targets/%/docker-built: targets/%/verified targets/%/bin/storage-tool.sh targets/%/Dockerfile
 	cd $(@D); docker build . -t mesosphere/marathon-storage-tool:$*
+	touch $@
+
+targets/%/docker-pushed: targets/%/docker-built
 	docker push mesosphere/marathon-storage-tool:$*
 	touch $@
